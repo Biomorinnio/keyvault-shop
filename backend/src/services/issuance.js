@@ -101,32 +101,14 @@ async function callSupplier(supplier, requestId, sku, orderId) {
   return { status: "timeout" };
 }
 
-async function attemptIssue(orderId) {
-  const claim = claimForDelivery(orderId);
+function abandonAfterSupplierTimeout(orderId, order) {
+  finalizeFailed(orderId, "delivery_failed");
+  return { ok: false, order: { ...order, status: "delivery_failed" }, reason: "supplier_timeout" };
+}
 
-  if (claim.outcome === "not_found") return { ok: false, reason: "order_not_found" };
-  if (claim.outcome === "already_delivered") return { ok: true, order: claim.order };
-  if (claim.outcome === "out_of_stock") return { ok: false, order: claim.order, reason: "out_of_stock" };
-  if (claim.outcome === "invalid_state") return { ok: false, order: claim.order, reason: "invalid_state" };
-  if (claim.outcome === "in_progress") return { ok: false, order: claim.order, reason: "in_progress" };
-
-  const { order, keyRow } = claim;
-  const requestIdA = `${orderId}:A`;
+async function attemptFallbackSupplier(order, orderId, keyRow) {
   const requestIdB = `${orderId}:B`;
-
-  let result = await callSupplier(supplierA, requestIdA, order.sku, orderId);
-
-  if (result.status === "ok") {
-    finalizeDelivered(orderId, keyRow.code, result.code);
-    return { ok: true, order: { ...order, status: "delivered", issued_code: result.code } };
-  }
-
-  if (result.status === "timeout") {
-    finalizeFailed(orderId, "delivery_failed");
-    return { ok: false, order: { ...order, status: "delivery_failed" }, reason: "supplier_timeout" };
-  }
-
-  result = await callSupplier(supplierB, requestIdB, order.sku, orderId);
+  const result = await callSupplier(supplierB, requestIdB, order.sku, orderId);
 
   if (result.status === "ok") {
     finalizeDelivered(orderId, keyRow.code, result.code);
@@ -139,6 +121,32 @@ async function attemptIssue(orderId) {
     order: { ...order, status: "delivery_failed" },
     reason: result.status === "timeout" ? "supplier_timeout" : "both_suppliers_failed",
   };
+}
+
+async function attemptIssue(orderId) {
+  const claim = claimForDelivery(orderId);
+
+  if (claim.outcome === "not_found") return { ok: false, reason: "order_not_found" };
+  if (claim.outcome === "already_delivered") return { ok: true, order: claim.order };
+  if (claim.outcome === "out_of_stock") return { ok: false, order: claim.order, reason: "out_of_stock" };
+  if (claim.outcome === "invalid_state") return { ok: false, order: claim.order, reason: "invalid_state" };
+  if (claim.outcome === "in_progress") return { ok: false, order: claim.order, reason: "in_progress" };
+
+  const { order, keyRow } = claim;
+  const requestIdA = `${orderId}:A`;
+
+  const result = await callSupplier(supplierA, requestIdA, order.sku, orderId);
+
+  if (result.status === "ok") {
+    finalizeDelivered(orderId, keyRow.code, result.code);
+    return { ok: true, order: { ...order, status: "delivered", issued_code: result.code } };
+  }
+
+  if (result.status === "timeout") {
+    return abandonAfterSupplierTimeout(orderId, order);
+  }
+
+  return attemptFallbackSupplier(order, orderId, keyRow);
 }
 
 module.exports = { attemptIssue, getOrder };
