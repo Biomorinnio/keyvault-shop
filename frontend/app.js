@@ -153,59 +153,6 @@ renderGrid(
   { discount: 0.2 }
 );
 
-const REVIEWS = [
-  {
-    seller: "Bizidin",
-    time: "Сегодня в 11:48",
-    text: "Отзывчивый и приятный продавец, помог не только с товаром но и с другим вопросом. Рекомендую!",
-    item: "🌸 FunTime | Полностью готовый сервер под ключ ⚡",
-    price: "139₽",
-  },
-  {
-    seller: "GameHub_RF",
-    time: "Вчера в 20:14",
-    text: "Ключ пришёл мгновенно после оплаты, всё активировалось с первого раза. Буду брать ещё!",
-    item: "🎮 Steam Deck | Подборка топ-игр 2025",
-    price: "590₽",
-  },
-  {
-    seller: "DigitalNomad",
-    time: "2 дня назад",
-    text: "Быстрая выдача, вежливая поддержка на связи 24/7. Один из лучших магазинов ключей.",
-    item: "🔥 Discord Nitro | Буст сервера на месяц",
-    price: "249₽",
-  },
-];
-
-(() => {
-  const grid = document.getElementById("reviewsGrid");
-  if (!grid) return;
-
-  grid.innerHTML = REVIEWS.map(
-    (r) => `
-      <div class="review-card">
-        <div class="review-card__head">
-          <img class="review-card__avatar" src="assets/reviews/avatar-1.png" alt="${r.seller}" />
-          <div class="review-card__meta">
-            <div class="review-card__seller">${r.seller}</div>
-            <div class="review-card__rating">
-              <span class="review-card__stars">★★★★★</span>
-              <span class="review-card__score">5.0</span>
-            </div>
-          </div>
-          <div class="review-card__time">${r.time}</div>
-        </div>
-        <div class="review-card__text">${r.text}</div>
-        <div class="review-card__item">
-          <img class="review-card__item-image" src="assets/products/pubg.png" alt="" />
-          <div class="review-card__item-title">${r.item}</div>
-          <div class="review-card__item-price">${r.price}</div>
-        </div>
-      </div>
-    `
-  ).join("");
-})();
-
 const API_BASE = "";
 
 const TERMINAL_STATUSES = new Set(["delivered", "payment_failed", "out_of_stock", "delivery_failed"]);
