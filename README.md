@@ -217,4 +217,4 @@ UPDATE promocodes SET used = used + 1 WHERE code = ? AND used < max_uses
 
 ## Реальное затраченное время
 
-8 часов.
+9 часов.
