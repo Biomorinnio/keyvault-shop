@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>keyvault-shop — магазин цифровых товаров</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header class="header">
+    <div class="header__inner">
+      <div class="header__center">
+        <button class="catalog-button" id="catalogBtn" type="button" aria-expanded="false" aria-controls="catalogMenu">
+          <img class="catalog-button__icon" src="assets/icons/catalog.svg" alt="" />
+          <span class="catalog-button__label">Каталог</span>
+        </button>
+
+        <div class="search-bar">
+          <div class="search-bar__fields">
+            <input class="search-bar__input" type="text" placeholder="Игра, приложение или услуга..." />
+            <button class="search-bar__favorite" type="button" aria-label="Избранное">
+              <img class="search-bar__favorite-icon" src="assets/icons/favorite.svg" alt="" />
+            </button>
+          </div>
+          <button class="search-bar__submit" type="button" aria-label="Найти">
+            <img class="search-bar__submit-icon" src="assets/icons/search.svg" alt="" />
+          </button>
+        </div>
+      </div>
+
+      <button class="profile-button" type="button" aria-label="Профиль">
+        <span class="profile-button__icon">
+          <img class="profile-button__icon-body" src="assets/icons/profile-1.svg" alt="" />
+          <img class="profile-button__icon-head" src="assets/icons/profile-2.svg" alt="" />
+        </span>
+      </button>
+    </div>
+
+    <div class="catalog-menu" id="catalogMenu">
+      <div class="container catalog-menu__inner">
+        <nav class="catalog-menu__sidebar">
+          <button class="catalog-menu__category catalog-menu__category_active" type="button">
+            Игры и игровые сервисы
+            <img class="catalog-menu__category-icon" src="assets/icons/chevron-active.svg" alt="" />
+          </button>
+          <button class="catalog-menu__category" type="button">
+            Игровые ценности
+            <img class="catalog-menu__category-icon" src="assets/icons/chevron-list.svg" alt="" />
+          </button>
+          <button class="catalog-menu__category" type="button">
+            Мобильные игры
+            <img class="catalog-menu__category-icon" src="assets/icons/chevron-list.svg" alt="" />
+          </button>
+          <button class="catalog-menu__category" type="button">
+            Сервисы и соцсети
+            <img class="catalog-menu__category-icon" src="assets/icons/chevron-list.svg" alt="" />
+          </button>
+          <button class="catalog-menu__category" type="button">
+            Программы
+            <img class="catalog-menu__category-icon" src="assets/icons/chevron-list.svg" alt="" />
+          </button>
+        </nav>
+
+        <div class="catalog-menu__content">
+          <div class="catalog-menu__col">
+            <div class="catalog-menu__col-heading">
+              Steam
+              <img class="catalog-menu__col-icon" src="assets/icons/chevron-heading.svg" alt="" />
+            </div>
+            <a class="catalog-menu__link" href="#">Игры и DLC</a>
+            <a class="catalog-menu__link" href="#">Пополнение баланса</a>
+            <a class="catalog-menu__link" href="#">Подарочные карты</a>
+            <a class="catalog-menu__link" href="#">Коллекционные карточки</a>
+            <a class="catalog-menu__link" href="#">Смена региона</a>
+          </div>
+          <div class="catalog-menu__col">
+            <div class="catalog-menu__col-heading">
+              PlayStation
+              <img class="catalog-menu__col-icon" src="assets/icons/chevron-heading.svg" alt="" />
+            </div>
+            <a class="catalog-menu__link" href="#">Игры и DLC</a>
+            <a class="catalog-menu__link" href="#">Пополнение баланса</a>
+            <a class="catalog-menu__link" href="#">Новые аккаунты</a>
+            <a class="catalog-menu__link" href="#">PS Plus</a>
+            <a class="catalog-menu__link" href="#">EA Play</a>
+          </div>
+          <div class="catalog-menu__col">
+            <div class="catalog-menu__col-heading">
+              Xbox
+              <img class="catalog-menu__col-icon" src="assets/icons/chevron-heading.svg" alt="" />
+            </div>
+            <a class="catalog-menu__link" href="#">Игры и DLC</a>
+            <a class="catalog-menu__link" href="#">Пополнение баланса</a>
+            <a class="catalog-menu__link" href="#">Новые аккаунты</a>
+            <a class="catalog-menu__link" href="#">Xbox Game Pass</a>
+            <a class="catalog-menu__link" href="#">Услуги</a>
+          </div>
+          <div class="catalog-menu__col">
+            <div class="catalog-menu__col-heading">
+              Nintendo
+              <img class="catalog-menu__col-icon" src="assets/icons/chevron-heading.svg" alt="" />
+            </div>
+            <a class="catalog-menu__link" href="#">Игры и DLC</a>
+            <a class="catalog-menu__link" href="#">Подарочные карты</a>
+            <a class="catalog-menu__link" href="#">Новые аккаунты</a>
+            <a class="catalog-menu__link" href="#">NS Online</a>
+          </div>
+          <div class="catalog-menu__col">
+            <div class="catalog-menu__col-heading">
+              Battle.net
+              <img class="catalog-menu__col-icon" src="assets/icons/chevron-heading.svg" alt="" />
+            </div>
+            <a class="catalog-menu__link" href="#">World of Warcraft</a>
+            <a class="catalog-menu__link" href="#">Подарочные карты</a>
+            <a class="catalog-menu__link" href="#">Прямое пополнение</a>
+            <a class="catalog-menu__link" href="#">Новые аккаунты</a>
+            <a class="catalog-menu__link" href="#">Смена региона</a>
+          </div>
+          <div class="catalog-menu__col catalog-menu__col_row_2">
+            <div class="catalog-menu__col-heading">
+              Подборки
+              <img class="catalog-menu__col-icon" src="assets/icons/chevron-heading.svg" alt="" />
+            </div>
+            <a class="catalog-menu__link" href="#">Скидки 90%</a>
+            <a class="catalog-menu__link" href="#">Популярные издатели</a>
+            <a class="catalog-menu__link" href="#">Лучшие серии игр</a>
+            <a class="catalog-menu__link" href="#">Steam Deck</a>
+            <a class="catalog-menu__link" href="#">Bundle-наборы</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main class="page">
+    <section class="container banner-wrap">
+      <div class="banner" id="banner" aria-roledescription="carousel" aria-label="Промо-баннер">
+        <div class="banner__clip">
+          <div class="banner__track" id="bannerTrack">
+            <div class="banner__slide banner__slide_theme_1"></div>
+            <div class="banner__slide banner__slide_theme_2"></div>
+            <div class="banner__slide banner__slide_theme_3"></div>
+            <div class="banner__slide banner__slide_theme_4"></div>
+            <div class="banner__slide banner__slide_theme_5"></div>
+            <div class="banner__slide banner__slide_theme_6"></div>
+          </div>
+        </div>
+
+        <div class="banner__nav">
+          <button class="banner__nav-btn" id="bannerPrev" type="button" aria-label="Предыдущий слайд">
+            <img class="banner__nav-icon" src="assets/icons/arrow-prev.svg" alt="" />
+          </button>
+          <button class="banner__nav-btn" id="bannerNext" type="button" aria-label="Следующий слайд">
+            <img class="banner__nav-icon" src="assets/icons/arrow-next.svg" alt="" />
+          </button>
+        </div>
+
+        <div class="banner__dots" id="bannerDots"></div>
+      </div>
+    </section>
+
+    <section class="container app-card-container">
+      <div class="app-card">
+        <div class="app-card__icons">
+          <button class="app-card__icon" style="--brand: #1482b3">
+            <span class="app-card__icon-image"><img src="assets/icons/svc-steam.png" alt="" /></span>
+            <span class="app-card__icon-label">Steam</span>
+          </button>
+          <button class="app-card__icon" style="--brand: #45baee">
+            <span class="app-card__icon-image"><img src="assets/icons/svc-telegram.png" alt="" /></span>
+            <span class="app-card__icon-label">Telegram</span>
+          </button>
+          <button class="app-card__icon" style="--brand: #b8c5ff">
+            <span class="app-card__icon-image"><img src="assets/icons/svc-roblox.png" alt="" /></span>
+            <span class="app-card__icon-label">Roblox</span>
+          </button>
+          <button class="app-card__icon" style="--brand: #e86eff">
+            <span class="app-card__icon-image"><img src="assets/icons/svc-brawlstars.png" alt="" /></span>
+            <span class="app-card__icon-label">Brawl Stars</span>
+          </button>
+          <button class="app-card__icon app-card__icon_theme_dark">
+            <span class="app-card__icon-image"><img src="assets/icons/svc-pubgm.png" alt="" /></span>
+            <span class="app-card__icon-label">PUBG Mob...</span>
+          </button>
+          <button class="app-card__icon" style="--brand: #4acdff">
+            <span class="app-card__icon-image"><img src="assets/icons/svc-appstore.png" alt="" /></span>
+            <span class="app-card__icon-label">App Store</span>
+          </button>
+          <button class="app-card__icon" style="--brand: #38d4ad">
+            <span class="app-card__icon-image"><img src="assets/icons/svc-chatgpt.png" alt="" /></span>
+            <span class="app-card__icon-label">ChatGPT</span>
+          </button>
+          <button class="app-card__icon" style="--brand: #117fda">
+            <span class="app-card__icon-image"><img src="assets/icons/svc-playstation.png" alt="" /></span>
+            <span class="app-card__icon-label">PlayStation</span>
+          </button>
+          <button class="app-card__icon app-card__icon_theme_dark" style="--brand: #454545">
+            <span class="app-card__icon-image"><img src="assets/icons/svc-tiktok-2.png" alt="" /></span>
+            <span class="app-card__icon-label">TikTok</span>
+          </button>
+          <button class="app-card__icon" style="--brand: rgba(255,255,255,0.45)">
+            <span class="app-card__icon-image"><img src="assets/icons/svc-mobilelegends.png" alt="" /></span>
+            <span class="app-card__icon-label">Mobile Leg..</span>
+          </button>
+          <button class="app-card__icon app-card__icon_theme_more">
+            <span class="app-card__icon-image"><img src="assets/icons/app-more.svg" alt="" /></span>
+            <span class="app-card__icon-label">ещё 841</span>
+          </button>
+        </div>
+
+        <div class="app-card__divider"></div>
+
+        <div class="topup-form">
+          <div class="topup-form__merchant">
+            <span class="topup-form__merchant-icon"><img src="assets/icons/svc-steam.png" alt="" /></span>
+            <div class="topup-form__merchant-info">
+              <div class="topup-form__merchant-title-row">
+                <span class="topup-form__merchant-title">Пополнение Steam</span>
+                <span class="topup-form__badge topup-form__badge_theme_green">5%</span>
+              </div>
+              <button class="topup-form__promo" type="button">
+                Ввести промокод
+                <img class="topup-form__promo-icon" src="assets/icons/chevron-right.svg" alt="" />
+              </button>
+            </div>
+          </div>
+
+          <div class="topup-form__field topup-form__field_type_login">
+            <img class="topup-form__field-icon" src="assets/icons/input-profile.svg" alt="" />
+            <span class="topup-form__field-placeholder">Логин Steam</span>
+            <button class="topup-form__info-badge" type="button" aria-label="Подсказка">i</button>
+          </div>
+
+          <div class="topup-form__field topup-form__field_type_amount">
+            <img class="topup-form__field-icon" src="assets/icons/coin.svg" alt="" />
+            <div class="topup-form__field-amount">
+              <span class="topup-form__field-label">Сумма</span>
+              <span class="topup-form__field-value">500₽</span>
+            </div>
+            <div class="topup-form__currency-switch" id="currencySwitch">
+              <button class="topup-form__currency-btn topup-form__currency-btn_active" type="button" data-currency="$">$</button>
+              <button class="topup-form__currency-btn" type="button" data-currency="₸">₸</button>
+              <button class="topup-form__currency-btn" type="button" data-currency="₽">₽</button>
+            </div>
+          </div>
+
+          <button class="topup-form__submit" type="button">Оплатить 500$</button>
+        </div>
+      </div>
+    </section>
+
+    <section class="container product-row product-row_variant_popular">
+      <div class="product-row__header">
+        <h2 class="product-row__title">Популярные товары</h2>
+        <div class="product-row__tabs">
+          <button class="product-row__tab product-row__tab_active" type="button">
+            <img class="product-row__tab-icon" src="assets/icons/tab-donate.svg" alt="" />
+            <span>Донат</span>
+          </button>
+          <button class="product-row__tab" type="button">
+            <img class="product-row__tab-icon" src="assets/icons/tab-subscribes.svg" alt="" />
+            <span>Подписки</span>
+          </button>
+          <button class="product-row__tab" type="button">
+            <img class="product-row__tab-icon" src="assets/icons/tab-items.svg" alt="" />
+            <span>Предметы</span>
+          </button>
+          <button class="product-row__tab" type="button">
+            <img class="product-row__tab-icon" src="assets/icons/tab-accounts.svg" alt="" />
+            <span>Аккаунты</span>
+          </button>
+          <button class="product-row__tab" type="button">
+            <img class="product-row__tab-icon" src="assets/icons/tab-keys.svg" alt="" />
+            <span>Ключи</span>
+          </button>
+          <button class="product-row__tab" type="button">
+            <img class="product-row__tab-icon" src="assets/icons/tab-gamevalut.svg" alt="" />
+            <span>Игровая валюта</span>
+          </button>
+          <button class="product-row__tab" type="button">
+            <img class="product-row__tab-icon" src="assets/icons/tab-other.svg" alt="" />
+            <span>Другое</span>
+          </button>
+        </div>
+      </div>
+
+      <div class="product-row__grid" id="productGrid"></div>
+    </section>
+
+    <section class="container product-row">
+      <div class="product-row__header">
+        <h2 class="product-row__title">Рекомендованные товары</h2>
+        <button class="product-row__show-all" type="button">Показать все</button>
+      </div>
+
+      <div class="product-row__grid" id="recommendedGrid"></div>
+    </section>
+
+    <section class="container product-row product-row_variant_other">
+      <div class="product-row__header">
+        <h2 class="product-row__title">Другие товары</h2>
+        <button class="product-row__show-all" type="button">Показать все</button>
+      </div>
+
+      <div class="product-row__grid" id="otherGrid"></div>
+    </section>
+
+    <section class="container product-row product-row_variant_reviews">
+      <div class="product-row__header">
+        <div class="product-row__heading">
+          <h2 class="product-row__title">Последние отзывы</h2>
+          <p class="product-row__subtitle">Все отзывы взяты с независимой площадки</p>
+        </div>
+        <button class="product-row__show-all" type="button">Показать все</button>
+      </div>
+
+      <div class="product-row__grid" id="reviewsGrid"></div>
+    </section>
+
+    <footer class="container footer-wrap">
+      <div class="footer">
+        <nav class="footer__nav">
+          <a class="footer__nav-link" href="#">Стать продавцом</a>
+          <a class="footer__nav-link" href="#">Бонусы</a>
+          <a class="footer__nav-link" href="#">Поддержка</a>
+          <a class="footer__nav-link" href="#">Гарантии</a>
+          <a class="footer__nav-link" href="#">Отзывы</a>
+        </nav>
+
+        <div class="footer__mid">
+          <a class="footer__social" href="#" aria-label="VK">
+            <img class="footer__social-icon" src="assets/icons/social-vk.svg" alt="" />
+          </a>
+          <a class="footer__social" href="#" aria-label="Telegram">
+            <img class="footer__social-icon" src="assets/icons/social-telegram.svg" alt="" />
+          </a>
+          <a class="footer__social" href="#" aria-label="TikTok">
+            <img class="footer__social-icon" src="assets/icons/social-tiktok.svg" alt="" />
+          </a>
+          <a class="footer__social" href="#" aria-label="YouTube">
+            <img class="footer__social-icon" src="assets/icons/social-youtube.svg" alt="" />
+          </a>
+          <div class="footer__payments">
+            <span class="payment-badge payment-badge_brand_visa">VISA</span>
+            <span class="payment-badge payment-badge_brand_mir">мир</span>
+            <span class="payment-badge payment-badge_brand_mc">
+              <span class="payment-badge__circle payment-badge__circle_color_red"></span>
+              <span class="payment-badge__circle payment-badge__circle_color_orange"></span>
+            </span>
+          </div>
+        </div>
+
+        <nav class="footer__legal">
+          <a class="footer__legal-link" href="#">Политика конфиденциальности</a>
+          <a class="footer__legal-link" href="#">Соглашение</a>
+          <a class="footer__legal-link" href="#">Договор-оферта</a>
+        </nav>
+      </div>
+    </footer>
+  </main>
+
+  <script src="app.js"></script>
+</body>
+</html>
