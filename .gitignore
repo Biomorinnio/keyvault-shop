@@ -6,3 +6,4 @@ data.sqlite
 data.sqlite-wal
 data.sqlite-shm
 .env
+skills-lock.json
