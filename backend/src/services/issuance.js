@@ -32,22 +32,13 @@ const claimForDelivery = db.immediateTransaction((id) => {
     return { outcome: "invalid_state", order };
   }
 
-  let keyRow = db.prepare("SELECT * FROM keys_pool WHERE order_id = ? AND status IN ('reserved','issued')").get(id);
+  const keyRow = db
+    .prepare("SELECT * FROM keys_pool WHERE order_id = ? AND status IN ('reserved','issued')")
+    .get(id);
 
   if (!keyRow) {
-    const reserve = db
-      .prepare(
-        `UPDATE keys_pool SET status = 'reserved', order_id = ?
-         WHERE code = (SELECT code FROM keys_pool WHERE sku = ? AND status = 'available' LIMIT 1)`
-      )
-      .run(id, order.sku);
-
-    if (reserve.changes === 0) {
-      db.prepare("UPDATE orders SET status = 'out_of_stock', updated_at = ? WHERE id = ?").run(now(), id);
-      return { outcome: "out_of_stock", order: { ...order, status: "out_of_stock" } };
-    }
-
-    keyRow = db.prepare("SELECT * FROM keys_pool WHERE order_id = ? AND status = 'reserved'").get(id);
+    db.prepare("UPDATE orders SET status = 'out_of_stock', updated_at = ? WHERE id = ?").run(now(), id);
+    return { outcome: "out_of_stock", order: { ...order, status: "out_of_stock" } };
   }
 
   db.prepare("UPDATE orders SET status = 'delivering', updated_at = ? WHERE id = ?").run(now(), id);
