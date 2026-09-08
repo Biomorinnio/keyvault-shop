@@ -3,6 +3,7 @@ const crypto = require("crypto");
 const db = require("../db");
 const { attemptIssue } = require("../services/issuance");
 const { getStock } = require("../services/catalog");
+const { broadcast } = require("../services/realtime");
 
 const router = express.Router();
 
@@ -57,6 +58,7 @@ router.patch("/admin/products/:sku", (req, res) => {
   if (info.changes === 0) return res.status(404).json({ error: "unknown sku" });
 
   const product = db.prepare("SELECT * FROM products WHERE sku = ?").get(sku);
+  broadcast("price_changed", { sku, price: product.price, currency: product.currency });
   res.json({ product: { ...product, stock: getStock(sku) } });
 });
 
@@ -75,7 +77,9 @@ router.post("/admin/products/:sku/keys", (req, res) => {
     }
   })();
 
-  res.json({ sku, added: count, stock: getStock(sku) });
+  const stock = getStock(sku);
+  broadcast("stock_changed", { sku, stock });
+  res.json({ sku, added: count, stock });
 });
 
 router.delete("/admin/products/:sku/keys", (req, res) => {
@@ -93,7 +97,9 @@ router.delete("/admin/products/:sku/keys", (req, res) => {
     )
     .run(sku, count);
 
-  res.json({ sku, removed: info.changes, stock: getStock(sku) });
+  const stock = getStock(sku);
+  broadcast("stock_changed", { sku, stock });
+  res.json({ sku, removed: info.changes, stock });
 });
 
 module.exports = router;

@@ -5,6 +5,7 @@ const paymentRouter = require("./routes/payment");
 const webhookRouter = require("./routes/webhook");
 const adminRouter = require("./routes/admin");
 const promoRouter = require("./routes/promo");
+const eventsRouter = require("./routes/events");
 const { listCatalog } = require("./services/catalog");
 
 const app = express();
@@ -19,6 +20,7 @@ app.use(paymentRouter);
 app.use(webhookRouter);
 app.use(adminRouter);
 app.use(promoRouter);
+app.use(eventsRouter);
 
 app.use((err, req, res, next) => {
   console.error(err);
