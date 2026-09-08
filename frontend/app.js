@@ -88,21 +88,7 @@
   restartAutoplay();
 })();
 
-const CATALOG = [
-  { sku: "STEAM-TOPUP-500", name: "Пополнение Steam 500 ₽", type: "topup", price: 500, currency: "RUB" },
-  { sku: "STEAM-TOPUP-1000", name: "Пополнение Steam 1000 ₽", type: "topup", price: 1000, currency: "RUB" },
-  { sku: "STEAM-TOPUP-2500", name: "Пополнение Steam 2500 ₽", type: "topup", price: 2500, currency: "RUB" },
-  { sku: "KEY-CS2-PRIME", name: "CS2 Prime Status ключ", type: "key", price: 1290, currency: "RUB" },
-  { sku: "KEY-GTA5", name: "GTA V ключ активации", type: "key", price: 1990, currency: "RUB" },
-  { sku: "KEY-EFT", name: "Escape from Tarkov ключ", type: "key", price: 3490, currency: "RUB" },
-  { sku: "SUB-DISCORD-1M", name: "Discord Nitro 1 месяц", type: "subscription", price: 399, currency: "RUB" },
-  { sku: "SUB-YT-3M", name: "YouTube Premium 3 месяца", type: "subscription", price: 1490, currency: "RUB" },
-  { sku: "SUB-SPOTIFY-1M", name: "Spotify Premium 1 месяц", type: "subscription", price: 299, currency: "RUB" },
-  { sku: "GIFT-PSN-1000", name: "PlayStation Store карта 1000 ₽", type: "giftcard", price: 1000, currency: "RUB" },
-  { sku: "GIFT-XBOX-1500", name: "Xbox Gift Card 1500 ₽", type: "giftcard", price: 1500, currency: "RUB" },
-  { sku: "GIFT-ROBLOX-800", name: "Roblox 800 Robux", type: "giftcard", price: 890, currency: "RUB" },
-];
-const CATALOG_BY_SKU = new Map(CATALOG.map((p) => [p.sku, p]));
+const API_BASE = "";
 
 function productCardHTML(p, { discount } = {}) {
   const oldPrice = discount ? Math.round(p.price / (1 - discount)) : null;
@@ -113,47 +99,47 @@ function productCardHTML(p, { discount } = {}) {
       </div>`
     : `<div class="product-card__price">${p.price.toLocaleString("ru-RU")} ₽</div>`;
 
+  const inStock = p.stock > 0;
+  const stockLine = inStock
+    ? `<div class="product-card__stock">В наличии: ${p.stock}</div>`
+    : `<div class="product-card__stock product-card__stock_out">Нет в наличии</div>`;
+
   return `
     <div class="product-card">
       <img class="product-card__image" src="assets/products/pubg.png" alt="${p.name}" />
       <div class="product-card__body">
         <div class="product-card__title">${p.name}</div>
         ${priceRow}
-        <button class="product-card__buy" type="button" data-sku="${p.sku}">Купить</button>
+        ${stockLine}
+        <button class="product-card__buy" type="button" data-sku="${p.sku}"${inStock ? "" : " disabled"}>${
+    inStock ? "Купить" : "Нет в наличии"
+  }</button>
       </div>
     </div>
   `;
 }
 
-function renderGrid(elementId, skus, options) {
+function renderGrid(elementId, products, options) {
   const grid = document.getElementById(elementId);
   if (!grid) return;
-  grid.innerHTML = skus
-    .map((sku) => CATALOG_BY_SKU.get(sku))
-    .filter(Boolean)
-    .map((p) => productCardHTML(p, options))
-    .join("");
+  grid.innerHTML = products.map((p) => productCardHTML(p, options)).join("");
 }
 
-renderGrid(
-  "productGrid",
-  ["STEAM-TOPUP-500", "KEY-CS2-PRIME", "KEY-GTA5", "SUB-DISCORD-1M", "GIFT-PSN-1000"],
-  { discount: 0.5 }
-);
+async function loadCatalog() {
+  const res = await fetch(`${API_BASE}/api/catalog`);
+  if (!res.ok) throw new Error("Не удалось загрузить каталог");
+  return (await res.json()).products;
+}
 
-renderGrid(
-  "recommendedGrid",
-  ["STEAM-TOPUP-1000", "KEY-EFT", "SUB-YT-3M", "GIFT-XBOX-1500", "SUB-SPOTIFY-1M"],
-  { discount: 0.3 }
-);
-
-renderGrid(
-  "otherGrid",
-  ["STEAM-TOPUP-2500", "GIFT-ROBLOX-800", "KEY-CS2-PRIME", "SUB-DISCORD-1M", "GIFT-PSN-1000"],
-  { discount: 0.2 }
-);
-
-const API_BASE = "";
+// Три витринные полки заполняются срезами реального каталога из БД. Скидка —
+// чисто визуальная (старая зачёркнутая цена), как и на первом этапе.
+loadCatalog()
+  .then((products) => {
+    renderGrid("productGrid", products.slice(0, 5), { discount: 0.5 });
+    renderGrid("recommendedGrid", products.slice(5, 10), { discount: 0.3 });
+    renderGrid("otherGrid", products.slice(10, 15), { discount: 0.2 });
+  })
+  .catch((err) => console.error(err));
 
 const TERMINAL_STATUSES = new Set(["delivered", "payment_failed", "out_of_stock", "delivery_failed"]);
 

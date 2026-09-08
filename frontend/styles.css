@@ -791,6 +791,17 @@ img {
   text-decoration: line-through;
 }
 
+.product-card__stock {
+  margin-bottom: 10px;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--color-price-old);
+}
+
+.product-card__stock_out {
+  color: #d23b3b;
+}
+
 .product-card__buy {
   height: 44px;
   background: var(--color-black);
@@ -803,6 +814,11 @@ img {
 
 .product-card__buy:hover {
   background: #1a1a1a;
+}
+
+.product-card__buy:disabled {
+  background: #b8b8b8;
+  cursor: not-allowed;
 }
 
 .catalog-menu {
