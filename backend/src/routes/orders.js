@@ -93,7 +93,7 @@ router.post("/orders/:id/accept-price", (req, res) => {
 router.get("/orders/:id", (req, res) => {
   const order = db.prepare("SELECT * FROM orders WHERE id = ?").get(req.params.id);
   if (!order) return res.status(404).json({ error: "order not found" });
-  res.json({ order });
+  res.json({ order, product: getProduct(order.sku) });
 });
 
 module.exports = router;

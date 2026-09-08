@@ -216,89 +216,227 @@ function connectRealtime() {
 syncCatalog();
 connectRealtime();
 
-const TERMINAL_STATUSES = new Set(["delivered", "payment_failed", "out_of_stock", "delivery_failed"]);
-
-const STATUS_LABEL = {
-  created: "Создаём заказ...",
-  paid: "Оплата подтверждена, выдаём...",
-  delivering: "Получаем код у поставщика...",
-  delivered: "Готово!",
-  payment_failed: "Оплата не прошла",
-  out_of_stock: "Нет в наличии",
-  delivery_failed: "Не удалось выдать код",
-};
-
-async function pollOrder(orderId, { intervalMs = 1000, timeoutMs = 20000 } = {}) {
-  const startedAt = Date.now();
-  while (Date.now() - startedAt < timeoutMs) {
-    const res = await fetch(`${API_BASE}/orders/${orderId}`);
-    const { order } = await res.json();
-    if (TERMINAL_STATUSES.has(order.status)) return order;
-    await new Promise((r) => setTimeout(r, intervalMs));
-  }
-  const res = await fetch(`${API_BASE}/orders/${orderId}`);
-  return (await res.json()).order;
+function showSoldOut(sku) {
+  applyStockChange(sku, 0);
+  const modal = document.getElementById("soldout");
+  if (modal) modal.hidden = false;
 }
 
-async function purchase(sku, button) {
-  const originalLabel = button.textContent;
-  button.disabled = true;
+(() => {
+  const closeBtn = document.getElementById("soldoutClose");
+  if (closeBtn) closeBtn.addEventListener("click", () => (document.getElementById("soldout").hidden = true));
+})();
 
+async function startCheckout(sku, button) {
+  const original = button.textContent;
+  button.disabled = true;
+  button.textContent = "Оформляем...";
   try {
-    button.textContent = "Создаём заказ...";
-    const createRes = await fetch(`${API_BASE}/orders`, {
+    const res = await fetch(`${API_BASE}/orders`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ sku }),
     });
-    if (!createRes.ok) throw new Error((await createRes.json()).error || "Не удалось создать заказ");
-    const { order } = await createRes.json();
-
-    button.textContent = "Оплата...";
-    const payRes = await fetch(`${API_BASE}/payment/mock`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ order_id: order.id }),
-    });
-    if (!payRes.ok) throw new Error((await payRes.json()).error || "Оплата не прошла");
-
-    const finalOrder = await pollOrder(order.id);
-    button.textContent = STATUS_LABEL[finalOrder.status] || finalOrder.status;
-
-    if (finalOrder.status === "delivered") {
-      window.alert(`Заказ ${finalOrder.id} доставлен!\nВаш код: ${finalOrder.issued_code}`);
-    } else if (finalOrder.status === "out_of_stock" || finalOrder.status === "delivery_failed") {
-      window.alert(
-        `Заказ ${finalOrder.id}: ${STATUS_LABEL[finalOrder.status]}.\nМы попробуем выдать код повторно чуть позже.`
-      );
+    if (res.status === 409) {
+      const body = await res.json().catch(() => ({}));
+      if (body.error === "out_of_stock") {
+        showSoldOut(sku);
+        button.disabled = false;
+        button.textContent = original;
+        return;
+      }
     }
-
-    setTimeout(() => {
-      button.textContent = originalLabel;
-      button.disabled = false;
-    }, 3000);
+    if (!res.ok) throw new Error("Не удалось оформить заказ");
+    const { order } = await res.json();
+    location.href = `/?order=${encodeURIComponent(order.id)}`;
   } catch (err) {
     console.error(err);
-    button.textContent = "Ошибка, повторить?";
-    setTimeout(() => {
-      button.textContent = originalLabel;
-      button.disabled = false;
-    }, 2000);
+    button.disabled = false;
+    button.textContent = original;
   }
 }
 
 document.addEventListener("click", (e) => {
   const buyBtn = e.target.closest(".product-card__buy");
   if (buyBtn && buyBtn.dataset.sku) {
-    purchase(buyBtn.dataset.sku, buyBtn);
+    startCheckout(buyBtn.dataset.sku, buyBtn);
     return;
   }
 
   const payBtn = e.target.closest(".topup-form__submit");
   if (payBtn) {
-    purchase("STEAM-TOPUP-500", payBtn);
+    startCheckout("STEAM-TOPUP-500", payBtn);
   }
 });
+
+const CHECKOUT_TERMINAL = new Set(["delivered", "payment_failed", "out_of_stock", "delivery_failed", "expired"]);
+
+function initCheckout(orderId) {
+  const view = document.getElementById("checkout");
+  const elProduct = document.getElementById("coProduct");
+  const elAmount = document.getElementById("coAmount");
+  const elTimer = document.getElementById("coTimer");
+  const elNotice = document.getElementById("coNotice");
+  const elStatus = document.getElementById("coStatus");
+  const elPay = document.getElementById("coPay");
+  const elCode = document.getElementById("coCode");
+  if (!view) return;
+
+  document.body.classList.add("checkout-active");
+  view.hidden = false;
+
+  let order = null;
+  let product = null;
+  let ticker = null;
+  let poller = null;
+  let payAttempted = false;
+
+  function expectedAmount() {
+    if (!product || !order) return order ? order.amount : 0;
+    return Math.max(product.price - (order.discount_amount || 0), 0);
+  }
+
+  function priceChanged() {
+    return Boolean(product && order && order.status === "created" && expectedAmount() !== order.amount);
+  }
+
+  function remainingMs() {
+    if (!order || !order.reserved_until) return 0;
+    return new Date(order.reserved_until).getTime() - Date.now();
+  }
+
+  function fmt(ms) {
+    const total = Math.max(0, Math.ceil(ms / 1000));
+    return `${String(Math.floor(total / 60)).padStart(2, "0")}:${String(total % 60).padStart(2, "0")}`;
+  }
+
+  function stopTimers() {
+    if (ticker) clearInterval(ticker);
+    if (poller) clearInterval(poller);
+    ticker = null;
+    poller = null;
+  }
+
+  function renderTimer() {
+    if (!order) return;
+    if (order.status === "created" && remainingMs() > 0) {
+      elTimer.hidden = false;
+      elTimer.classList.remove("checkout__timer_expired");
+      elTimer.textContent = `Бронь действует ещё ${fmt(remainingMs())}`;
+    } else if (order.status === "created") {
+      elTimer.hidden = false;
+      elTimer.classList.add("checkout__timer_expired");
+      elTimer.textContent = "Бронь истекла";
+    } else {
+      elTimer.hidden = true;
+    }
+  }
+
+  function render() {
+    if (!order) return;
+    elProduct.textContent = product ? product.name : order.sku;
+
+    if (priceChanged()) {
+      elAmount.innerHTML = `<s>${formatPrice(order.amount)}</s> ${formatPrice(expectedAmount())}`;
+    } else {
+      elAmount.textContent = formatPrice(order.amount);
+    }
+
+    elNotice.hidden = true;
+    elCode.hidden = true;
+    elPay.hidden = false;
+    elPay.disabled = payAttempted;
+
+    const expired = order.status === "expired" || (order.status === "created" && remainingMs() <= 0);
+
+    if (order.status === "created" && !expired) {
+      elStatus.textContent = "Ключ забронирован. Завершите оплату до конца отсчёта.";
+      if (priceChanged()) {
+        elNotice.hidden = false;
+        elNotice.textContent = `Цена изменилась: было ${formatPrice(order.amount)}, стало ${formatPrice(
+          expectedAmount()
+        )}. Подтвердите новую цену при оплате.`;
+        elPay.textContent = `Оплатить по новой цене (${formatPrice(expectedAmount())})`;
+      } else {
+        elPay.textContent = "Оплатить";
+      }
+    } else if (expired) {
+      elStatus.textContent = "Бронь истекла — ключ вернулся в продажу. Вернитесь к товару.";
+      elPay.hidden = true;
+    } else if (order.status === "paid" || order.status === "delivering") {
+      elStatus.textContent = "Оплата подтверждена, выдаём код...";
+      elPay.hidden = true;
+    } else if (order.status === "delivered") {
+      elStatus.textContent = "Готово! Заказ выдан.";
+      elPay.hidden = true;
+      if (order.issued_code) {
+        elCode.hidden = false;
+        elCode.textContent = `Ваш код: ${order.issued_code}`;
+      }
+    } else if (order.status === "payment_failed") {
+      elStatus.textContent = "Оплата не прошла. Вернитесь к товару.";
+      elPay.hidden = true;
+    } else {
+      elStatus.textContent = "Не удалось выдать код. Мы попробуем повторно чуть позже.";
+      elPay.hidden = true;
+    }
+
+    renderTimer();
+  }
+
+  async function refresh() {
+    const res = await fetch(`${API_BASE}/orders/${orderId}`);
+    if (res.status === 404) {
+      stopTimers();
+      elStatus.textContent = "Заказ не найден.";
+      elTimer.hidden = true;
+      elPay.hidden = true;
+      return;
+    }
+    const data = await res.json();
+    order = data.order;
+    product = data.product;
+    render();
+    if (CHECKOUT_TERMINAL.has(order.status)) stopTimers();
+  }
+
+  async function pay() {
+    payAttempted = true;
+    elPay.disabled = true;
+    try {
+      if (priceChanged()) {
+        await fetch(`${API_BASE}/orders/${orderId}/accept-price`, { method: "POST" });
+        await refresh();
+      }
+      const res = await fetch(`${API_BASE}/payment/mock`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ order_id: orderId }),
+      });
+      if (res.status === 409) {
+        const body = await res.json().catch(() => ({}));
+        payAttempted = false;
+        if (body.error === "price_changed") {
+          elNotice.hidden = false;
+          elNotice.textContent = `Цена изменилась до ${formatPrice(body.current_price)}. Подтвердите новую цену.`;
+        }
+        await refresh();
+        return;
+      }
+      await refresh();
+    } catch (err) {
+      console.error(err);
+      payAttempted = false;
+      elPay.disabled = false;
+    }
+  }
+
+  elPay.addEventListener("click", pay);
+
+  ticker = setInterval(renderTimer, 1000);
+  poller = setInterval(refresh, 2000);
+  refresh();
+}
 
 (() => {
   const switcher = document.getElementById("currencySwitch");
@@ -312,4 +450,9 @@ document.addEventListener("click", (e) => {
       .forEach((b) => b.classList.remove("topup-form__currency-btn_active"));
     btn.classList.add("topup-form__currency-btn_active");
   });
+})();
+
+(() => {
+  const orderId = new URLSearchParams(location.search).get("order");
+  if (orderId) initCheckout(orderId);
 })();

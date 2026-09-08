@@ -316,6 +316,34 @@
     </section>
   </main>
 
+  <div class="checkout" id="checkout" hidden>
+    <div class="checkout__panel">
+      <a class="checkout__back" href="/">← Вернуться к каталогу</a>
+      <h1 class="checkout__heading">Оформление заказа</h1>
+      <div class="checkout__row">
+        <span class="checkout__label">Товар</span>
+        <span class="checkout__value" id="coProduct"></span>
+      </div>
+      <div class="checkout__row">
+        <span class="checkout__label">Сумма</span>
+        <span class="checkout__value" id="coAmount"></span>
+      </div>
+      <div class="checkout__timer" id="coTimer" hidden></div>
+      <div class="checkout__notice" id="coNotice" hidden></div>
+      <div class="checkout__status" id="coStatus"></div>
+      <button class="checkout__pay" id="coPay" type="button">Оплатить</button>
+      <div class="checkout__code" id="coCode" hidden></div>
+    </div>
+  </div>
+
+  <div class="soldout" id="soldout" hidden>
+    <div class="soldout__panel">
+      <div class="soldout__title">Товар только что раскупили</div>
+      <div class="soldout__text">Последнюю единицу забрал другой покупатель.</div>
+      <button class="soldout__close" id="soldoutClose" type="button">Вернуться к каталогу</button>
+    </div>
+  </div>
+
   <script src="app.js"></script>
 </body>
 </html>
