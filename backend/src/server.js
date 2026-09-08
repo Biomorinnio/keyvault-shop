@@ -7,6 +7,7 @@ const adminRouter = require("./routes/admin");
 const promoRouter = require("./routes/promo");
 const eventsRouter = require("./routes/events");
 const { listCatalog } = require("./services/catalog");
+const reservationExpiry = require("./services/reservationExpiry");
 
 const app = express();
 app.use(express.json());
@@ -30,4 +31,5 @@ app.use((err, req, res, next) => {
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`keyvault-shop backend listening on http://localhost:${PORT}`);
+  reservationExpiry.start();
 });
