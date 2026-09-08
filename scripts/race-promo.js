@@ -22,9 +22,18 @@ async function applyPromo(orderId) {
   return { status: res.status, body };
 }
 
+async function ensureStock(sku, count) {
+  await fetch(`${BASE_URL}/admin/products/${sku}/keys`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ count }),
+  });
+}
+
 async function main() {
   console.log(`Создаём ${ATTEMPTS} заказов и применяем к ним промокод ${PROMO_CODE} (лимит 3) параллельно...`);
 
+  await ensureStock("KEY-CS2-PRIME", ATTEMPTS);
   const orders = await Promise.all(Array.from({ length: ATTEMPTS }, createOrder));
 
   const results = await Promise.all(orders.map((o) => applyPromo(o.id)));

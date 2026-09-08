@@ -5,6 +5,12 @@ function sleep(ms) {
 }
 
 async function main() {
+  await fetch(`${BASE_URL}/admin/products/KEY-EFT/keys`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ count: 1 }),
+  });
+
   const createRes = await fetch(`${BASE_URL}/orders`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
