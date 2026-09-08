@@ -131,8 +131,6 @@ async function loadCatalog() {
   return (await res.json()).products;
 }
 
-// Три витринные полки заполняются срезами реального каталога из БД. Скидка —
-// чисто визуальная (старая зачёркнутая цена), как и на первом этапе.
 loadCatalog()
   .then((products) => {
     renderGrid("productGrid", products.slice(0, 5), { discount: 0.5 });

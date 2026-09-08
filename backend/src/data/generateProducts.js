@@ -1,14 +1,5 @@
-// Детерминированный генератор большого каталога для демонстрации мгновенного
-// поиска на следующем этапе. Всё считается от фиксированного сида, поэтому при
-// каждом старте получается ровно тот же набор товаров и ключей — сидинг через
-// INSERT OR IGNORE остаётся идемпотентным (перезапуск не плодит дубли и не
-// меняет количество ключей у товара).
-
 const GENERATED_COUNT = 5000;
 
-// mulberry32 — маленький детерминированный PRNG. Одинаковый seed => одинаковая
-// последовательность, поэтому и товары, и число ключей у каждого товара
-// воспроизводимы между рестартами.
 function mulberry32(seed) {
   let a = seed >>> 0;
   return function () {
@@ -29,8 +20,6 @@ function randInt(min, max) {
   return min + Math.floor(rng() * (max - min + 1));
 }
 
-// Названия без символов &, <, >, " — чтобы карточки можно было безопасно
-// вставлять в разметку без экранирования, как и исходные 12 товаров.
 const GAMES = [
   "Counter-Strike 2", "Dota 2", "GTA V", "Cyberpunk 2077", "Elden Ring",
   "The Witcher 3", "Red Dead Redemption 2", "Baldurs Gate 3", "Hogwarts Legacy",
@@ -77,9 +66,9 @@ function makeName(type) {
 }
 
 function makePrice(type) {
-  if (type === "key") return randInt(2, 50) * 100 - 10; // 190..4990
+  if (type === "key") return randInt(2, 50) * 100 - 10;
   if (type === "topup") return pick(TOPUP_AMOUNTS);
-  if (type === "subscription") return randInt(2, 40) * 50 - 1; // 99..1999
+  if (type === "subscription") return randInt(2, 40) * 50 - 1;
   return pick(GIFTCARD_AMOUNTS);
 }
 
@@ -98,8 +87,6 @@ for (let i = 1; i <= GENERATED_COUNT; i++) {
     image: null,
   });
 
-  // 0..5 ключей: часть товаров окажется распродана (stock === 0), часть — в
-  // наличии, чтобы витрина показывала оба состояния.
   const keyCount = randInt(0, 5);
   for (let k = 1; k <= keyCount; k++) {
     GENERATED_KEYS_SEED.push({ code: `${sku}-K${String(k).padStart(2, "0")}`, sku });

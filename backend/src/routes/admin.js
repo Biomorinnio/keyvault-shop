@@ -10,7 +10,6 @@ function now() {
   return new Date().toISOString();
 }
 
-// Кол-во для операций со складом: целое в разумных пределах.
 function parseCount(value) {
   const n = Number(value);
   if (!Number.isInteger(n) || n < 1 || n > 10000) return null;
@@ -47,7 +46,6 @@ router.get("/admin/keys-for-order/:orderId", (req, res) => {
   res.json({ keys });
 });
 
-// Демонстрация живой витрины: сменить цену товара.
 router.patch("/admin/products/:sku", (req, res) => {
   const { sku } = req.params;
   const { price } = req.body || {};
@@ -62,7 +60,6 @@ router.patch("/admin/products/:sku", (req, res) => {
   res.json({ product: { ...product, stock: getStock(sku) } });
 });
 
-// Демонстрация пополнения склада: добавить N доступных ключей.
 router.post("/admin/products/:sku/keys", (req, res) => {
   const { sku } = req.params;
   const count = parseCount(req.body && req.body.count);
@@ -74,7 +71,6 @@ router.post("/admin/products/:sku/keys", (req, res) => {
   const insert = db.prepare("INSERT INTO keys_pool (code, sku, status, order_id) VALUES (?, ?, 'available', NULL)");
   db.immediateTransaction(() => {
     for (let i = 0; i < count; i++) {
-      // Случайный суффикс, чтобы не столкнуться с сид-ключами и между вызовами.
       insert.run(`${sku}-ADM-${crypto.randomBytes(5).toString("hex").toUpperCase()}`, sku);
     }
   })();
@@ -82,7 +78,6 @@ router.post("/admin/products/:sku/keys", (req, res) => {
   res.json({ sku, added: count, stock: getStock(sku) });
 });
 
-// Демонстрация «товар закончился»: убрать N доступных ключей из пула.
 router.delete("/admin/products/:sku/keys", (req, res) => {
   const { sku } = req.params;
   const count = parseCount(req.body && req.body.count);

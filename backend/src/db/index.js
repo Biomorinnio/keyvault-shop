@@ -43,9 +43,7 @@ function seedProducts() {
 function seedKeysPool() {
   const insert = db.prepare("INSERT OR IGNORE INTO keys_pool (code, sku, status, order_id) VALUES (?, ?, 'available', NULL)");
   immediateTransaction(() => {
-    // Исходные 12 товаров получают заранее заготовленный пул ключей...
     for (const { code, sku } of KEYS_POOL_SEED) insert.run(code, sku);
-    // ...а сгенерированные — свои 0..5 ключей из генератора каталога.
     for (const { code, sku } of GENERATED_KEYS_SEED) insert.run(code, sku);
   })();
 }
