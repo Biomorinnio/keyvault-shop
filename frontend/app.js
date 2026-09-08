@@ -90,14 +90,18 @@
 
 const API_BASE = "";
 
+function formatPrice(value) {
+  return `${value.toLocaleString("ru-RU")} ₽`;
+}
+
 function productCardHTML(p, { discount } = {}) {
   const oldPrice = discount ? Math.round(p.price / (1 - discount)) : null;
   const priceRow = oldPrice
     ? `<div class="product-card__price-row">
-        <span class="product-card__price">${p.price.toLocaleString("ru-RU")} ₽</span>
-        <span class="product-card__price-old">${oldPrice.toLocaleString("ru-RU")} ₽</span>
+        <span class="product-card__price">${formatPrice(p.price)}</span>
+        <span class="product-card__price-old">${formatPrice(oldPrice)}</span>
       </div>`
-    : `<div class="product-card__price">${p.price.toLocaleString("ru-RU")} ₽</div>`;
+    : `<div class="product-card__price">${formatPrice(p.price)}</div>`;
 
   const inStock = p.stock > 0;
   const stockLine = inStock
@@ -105,7 +109,7 @@ function productCardHTML(p, { discount } = {}) {
     : `<div class="product-card__stock product-card__stock_out">Нет в наличии</div>`;
 
   return `
-    <div class="product-card">
+    <div class="product-card" data-sku="${p.sku}" data-discount="${discount || 0}">
       <img class="product-card__image" src="assets/products/pubg.png" alt="${p.name}" />
       <div class="product-card__body">
         <div class="product-card__title">${p.name}</div>
@@ -131,13 +135,86 @@ async function loadCatalog() {
   return (await res.json()).products;
 }
 
-loadCatalog()
-  .then((products) => {
-    renderGrid("productGrid", products.slice(0, 5), { discount: 0.5 });
-    renderGrid("recommendedGrid", products.slice(5, 10), { discount: 0.3 });
-    renderGrid("otherGrid", products.slice(10, 15), { discount: 0.2 });
-  })
-  .catch((err) => console.error(err));
+function renderShelves(products) {
+  renderGrid("productGrid", products.slice(0, 5), { discount: 0.5 });
+  renderGrid("recommendedGrid", products.slice(5, 10), { discount: 0.3 });
+  renderGrid("otherGrid", products.slice(10, 15), { discount: 0.2 });
+}
+
+async function syncCatalog() {
+  try {
+    renderShelves(await loadCatalog());
+  } catch (err) {
+    console.error(err);
+  }
+}
+
+function cardsForSku(sku) {
+  return document.querySelectorAll(`.product-card[data-sku="${CSS.escape(sku)}"]`);
+}
+
+function applyPriceChange(sku, price) {
+  cardsForSku(sku).forEach((card) => {
+    const discount = Number(card.dataset.discount) || 0;
+    const priceEl = card.querySelector(".product-card__price");
+    if (priceEl) priceEl.textContent = formatPrice(price);
+    const oldEl = card.querySelector(".product-card__price-old");
+    if (oldEl && discount > 0) oldEl.textContent = formatPrice(Math.round(price / (1 - discount)));
+  });
+}
+
+function applyStockChange(sku, stock) {
+  const inStock = stock > 0;
+  cardsForSku(sku).forEach((card) => {
+    const stockEl = card.querySelector(".product-card__stock");
+    if (stockEl) {
+      stockEl.textContent = inStock ? `В наличии: ${stock}` : "Нет в наличии";
+      stockEl.classList.toggle("product-card__stock_out", !inStock);
+    }
+    const buyEl = card.querySelector(".product-card__buy");
+    if (buyEl) {
+      buyEl.disabled = !inStock;
+      buyEl.textContent = inStock ? "Купить" : "Нет в наличии";
+    }
+  });
+}
+
+function setConnStatus(online) {
+  const el = document.getElementById("connStatus");
+  if (!el) return;
+  el.classList.toggle("conn-status_online", online);
+  el.classList.toggle("conn-status_reconnecting", !online);
+  el.textContent = online ? "онлайн" : "переподключение…";
+}
+
+function connectRealtime() {
+  let firstOpen = true;
+  const es = new EventSource(`${API_BASE}/api/events`);
+
+  es.addEventListener("open", () => {
+    setConnStatus(true);
+    if (firstOpen) {
+      firstOpen = false;
+    } else {
+      syncCatalog();
+    }
+  });
+
+  es.addEventListener("error", () => setConnStatus(false));
+
+  es.addEventListener("price_changed", (e) => {
+    const { sku, price } = JSON.parse(e.data);
+    applyPriceChange(sku, price);
+  });
+
+  es.addEventListener("stock_changed", (e) => {
+    const { sku, stock } = JSON.parse(e.data);
+    applyStockChange(sku, stock);
+  });
+}
+
+syncCatalog();
+connectRealtime();
 
 const TERMINAL_STATUSES = new Set(["delivered", "payment_failed", "out_of_stock", "delivery_failed"]);
 
