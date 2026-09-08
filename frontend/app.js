@@ -205,6 +205,7 @@ function connectRealtime() {
   es.addEventListener("price_changed", (e) => {
     const { sku, price } = JSON.parse(e.data);
     applyPriceChange(sku, price);
+    document.dispatchEvent(new CustomEvent("realtime:price_changed", { detail: { sku, price } }));
   });
 
   es.addEventListener("stock_changed", (e) => {
@@ -353,10 +354,10 @@ function initCheckout(orderId) {
       elStatus.textContent = "Ключ забронирован. Завершите оплату до конца отсчёта.";
       if (priceChanged()) {
         elNotice.hidden = false;
-        elNotice.textContent = `Цена изменилась: было ${formatPrice(order.amount)}, стало ${formatPrice(
-          expectedAmount()
-        )}. Подтвердите новую цену при оплате.`;
-        elPay.textContent = `Оплатить по новой цене (${formatPrice(expectedAmount())})`;
+        elNotice.textContent = `Цена изменилась, подтвердите новую сумму: было ${formatPrice(
+          order.amount
+        )}, стало ${formatPrice(expectedAmount())}.`;
+        elPay.textContent = "Подтвердить новую цену и оплатить";
       } else {
         elPay.textContent = "Оплатить";
       }
@@ -418,7 +419,9 @@ function initCheckout(orderId) {
         payAttempted = false;
         if (body.error === "price_changed") {
           elNotice.hidden = false;
-          elNotice.textContent = `Цена изменилась до ${formatPrice(body.current_price)}. Подтвердите новую цену.`;
+          elNotice.textContent = `Цена изменилась, подтвердите новую сумму: стало ${formatPrice(
+            body.current_price
+          )}.`;
         }
         await refresh();
         return;
@@ -431,7 +434,14 @@ function initCheckout(orderId) {
     }
   }
 
+  function onRealtimePriceChanged(e) {
+    if (!order || !product || e.detail.sku !== order.sku) return;
+    product.price = e.detail.price;
+    render();
+  }
+
   elPay.addEventListener("click", pay);
+  document.addEventListener("realtime:price_changed", onRealtimePriceChanged);
 
   ticker = setInterval(renderTimer, 1000);
   poller = setInterval(refresh, 2000);
