@@ -6,7 +6,7 @@ const webhookRouter = require("./routes/webhook");
 const adminRouter = require("./routes/admin");
 const promoRouter = require("./routes/promo");
 const eventsRouter = require("./routes/events");
-const { listCatalog } = require("./services/catalog");
+const catalogRouter = require("./routes/catalog");
 const reservationExpiry = require("./services/reservationExpiry");
 
 const app = express();
@@ -14,8 +14,7 @@ app.use(express.json());
 
 app.use(express.static(path.join(__dirname, "..", "..", "frontend")));
 
-app.get("/api/catalog", (req, res) => res.json({ products: listCatalog(50) }));
-
+app.use(catalogRouter);
 app.use(ordersRouter);
 app.use(paymentRouter);
 app.use(webhookRouter);
