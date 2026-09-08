@@ -20,12 +20,12 @@
 
         <div class="search-bar">
           <div class="search-bar__fields">
-            <input class="search-bar__input" type="text" placeholder="Игра, приложение или услуга..." />
+            <input class="search-bar__input" id="searchInput" type="text" placeholder="Игра, приложение или услуга..." />
             <button class="search-bar__favorite" type="button" aria-label="Избранное">
               <img class="search-bar__favorite-icon" src="assets/icons/favorite.svg" alt="" />
             </button>
           </div>
-          <button class="search-bar__submit" type="button" aria-label="Найти">
+          <button class="search-bar__submit" id="searchSubmit" type="button" aria-label="Найти">
             <img class="search-bar__submit-icon" src="assets/icons/search.svg" alt="" />
           </button>
         </div>
@@ -72,9 +72,9 @@
               Steam
               <img class="catalog-menu__col-icon" src="assets/icons/chevron-heading.svg" alt="" />
             </div>
-            <a class="catalog-menu__link" href="#">Игры и DLC</a>
-            <a class="catalog-menu__link" href="#">Пополнение баланса</a>
-            <a class="catalog-menu__link" href="#">Подарочные карты</a>
+            <a class="catalog-menu__link" href="#" data-type="key">Игры и DLC</a>
+            <a class="catalog-menu__link" href="#" data-type="topup">Пополнение баланса</a>
+            <a class="catalog-menu__link" href="#" data-type="giftcard">Подарочные карты</a>
             <a class="catalog-menu__link" href="#">Коллекционные карточки</a>
             <a class="catalog-menu__link" href="#">Смена региона</a>
           </div>
@@ -83,21 +83,21 @@
               PlayStation
               <img class="catalog-menu__col-icon" src="assets/icons/chevron-heading.svg" alt="" />
             </div>
-            <a class="catalog-menu__link" href="#">Игры и DLC</a>
-            <a class="catalog-menu__link" href="#">Пополнение баланса</a>
+            <a class="catalog-menu__link" href="#" data-type="key">Игры и DLC</a>
+            <a class="catalog-menu__link" href="#" data-type="topup">Пополнение баланса</a>
             <a class="catalog-menu__link" href="#">Новые аккаунты</a>
-            <a class="catalog-menu__link" href="#">PS Plus</a>
-            <a class="catalog-menu__link" href="#">EA Play</a>
+            <a class="catalog-menu__link" href="#" data-type="subscription">PS Plus</a>
+            <a class="catalog-menu__link" href="#" data-type="subscription">EA Play</a>
           </div>
           <div class="catalog-menu__col">
             <div class="catalog-menu__col-heading">
               Xbox
               <img class="catalog-menu__col-icon" src="assets/icons/chevron-heading.svg" alt="" />
             </div>
-            <a class="catalog-menu__link" href="#">Игры и DLC</a>
-            <a class="catalog-menu__link" href="#">Пополнение баланса</a>
+            <a class="catalog-menu__link" href="#" data-type="key">Игры и DLC</a>
+            <a class="catalog-menu__link" href="#" data-type="topup">Пополнение баланса</a>
             <a class="catalog-menu__link" href="#">Новые аккаунты</a>
-            <a class="catalog-menu__link" href="#">Xbox Game Pass</a>
+            <a class="catalog-menu__link" href="#" data-type="subscription">Xbox Game Pass</a>
             <a class="catalog-menu__link" href="#">Услуги</a>
           </div>
           <div class="catalog-menu__col">
@@ -105,10 +105,10 @@
               Nintendo
               <img class="catalog-menu__col-icon" src="assets/icons/chevron-heading.svg" alt="" />
             </div>
-            <a class="catalog-menu__link" href="#">Игры и DLC</a>
-            <a class="catalog-menu__link" href="#">Подарочные карты</a>
+            <a class="catalog-menu__link" href="#" data-type="key">Игры и DLC</a>
+            <a class="catalog-menu__link" href="#" data-type="giftcard">Подарочные карты</a>
             <a class="catalog-menu__link" href="#">Новые аккаунты</a>
-            <a class="catalog-menu__link" href="#">NS Online</a>
+            <a class="catalog-menu__link" href="#" data-type="subscription">NS Online</a>
           </div>
           <div class="catalog-menu__col">
             <div class="catalog-menu__col-heading">
@@ -116,8 +116,8 @@
               <img class="catalog-menu__col-icon" src="assets/icons/chevron-heading.svg" alt="" />
             </div>
             <a class="catalog-menu__link" href="#">World of Warcraft</a>
-            <a class="catalog-menu__link" href="#">Подарочные карты</a>
-            <a class="catalog-menu__link" href="#">Прямое пополнение</a>
+            <a class="catalog-menu__link" href="#" data-type="giftcard">Подарочные карты</a>
+            <a class="catalog-menu__link" href="#" data-type="topup">Прямое пополнение</a>
             <a class="catalog-menu__link" href="#">Новые аккаунты</a>
             <a class="catalog-menu__link" href="#">Смена региона</a>
           </div>
@@ -259,7 +259,7 @@
       </div>
     </section>
 
-    <section class="container product-row product-row_variant_popular">
+    <section class="container product-row product-row_variant_popular" id="popularSection">
       <div class="product-row__header">
         <h2 class="product-row__title">Популярные товары</h2>
         <div class="product-row__tabs">
@@ -297,7 +297,7 @@
       <div class="product-row__grid" id="productGrid"></div>
     </section>
 
-    <section class="container product-row">
+    <section class="container product-row" id="recommendedSection">
       <div class="product-row__header">
         <h2 class="product-row__title">Рекомендованные товары</h2>
         <button class="product-row__show-all" type="button">Показать все</button>
@@ -306,13 +306,37 @@
       <div class="product-row__grid" id="recommendedGrid"></div>
     </section>
 
-    <section class="container product-row product-row_variant_other">
+    <section class="container product-row product-row_variant_other" id="otherSection">
       <div class="product-row__header">
         <h2 class="product-row__title">Другие товары</h2>
         <button class="product-row__show-all" type="button">Показать все</button>
       </div>
 
       <div class="product-row__grid" id="otherGrid"></div>
+    </section>
+
+    <section class="container product-row" id="searchResults" hidden>
+      <div class="product-row__header">
+        <h2 class="product-row__title">Результаты поиска</h2>
+        <div class="search-results__meta">
+          <span class="search-results__count" id="searchCount"></span>
+          <span class="search-results__loading" id="searchLoading" hidden>Обновляем…</span>
+        </div>
+      </div>
+
+      <div class="product-row__grid" id="searchGrid"></div>
+
+      <div class="search-results__empty" id="searchEmpty" hidden>
+        Ничего не найдено. Попробуйте другой запрос или сбросьте фильтр.
+      </div>
+
+      <div class="search-results__pagination" id="searchPagination" hidden>
+        <button class="search-results__page-btn" id="searchPrev" type="button">← Назад</button>
+        <span class="search-results__page-info" id="searchPageInfo"></span>
+        <button class="search-results__page-btn" id="searchNext" type="button">Вперёд →</button>
+      </div>
+
+      <button class="search-results__reset" id="searchReset" type="button" hidden>Сбросить и вернуться к витрине</button>
     </section>
   </main>
 

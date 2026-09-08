@@ -130,7 +130,7 @@ function renderGrid(elementId, products, options) {
 }
 
 async function loadCatalog() {
-  const res = await fetch(`${API_BASE}/api/catalog`);
+  const res = await fetch(`${API_BASE}/api/catalog?limit=15`);
   if (!res.ok) throw new Error("Не удалось загрузить каталог");
   return (await res.json()).products;
 }
@@ -196,7 +196,7 @@ function connectRealtime() {
     if (firstOpen) {
       firstOpen = false;
     } else {
-      syncCatalog();
+      resyncActiveView();
     }
   });
 
@@ -216,6 +216,202 @@ function connectRealtime() {
 
 syncCatalog();
 connectRealtime();
+
+const SEARCH_PAGE_SIZE = 24;
+const SEARCH_DEBOUNCE_MS = 250;
+
+const searchState = { q: "", type: "", page: 1 };
+let searchAbortController = null;
+let searchDebounceTimer = null;
+
+function isSearchActive() {
+  return Boolean(searchState.q || searchState.type);
+}
+
+function currentSearchParams() {
+  const params = new URLSearchParams();
+  if (searchState.q) params.set("q", searchState.q);
+  if (searchState.type) params.set("type", searchState.type);
+  if (searchState.page > 1) params.set("page", String(searchState.page));
+  return params;
+}
+
+function syncSearchUrl() {
+  const qs = currentSearchParams().toString();
+  history.replaceState(null, "", qs ? `/?${qs}` : "/");
+}
+
+function showShelves() {
+  document.getElementById("searchResults").hidden = true;
+  document.getElementById("popularSection").hidden = false;
+  document.getElementById("recommendedSection").hidden = false;
+  document.getElementById("otherSection").hidden = false;
+}
+
+function showSearchResultsView() {
+  document.getElementById("searchResults").hidden = false;
+  document.getElementById("popularSection").hidden = true;
+  document.getElementById("recommendedSection").hidden = true;
+  document.getElementById("otherSection").hidden = true;
+}
+
+function setSearchLoading(loading) {
+  document.getElementById("searchLoading").hidden = !loading;
+}
+
+function diffRenderGrid(grid, products) {
+  const existing = new Map();
+  for (const child of Array.from(grid.children)) {
+    if (child.dataset.sku) existing.set(child.dataset.sku, child);
+  }
+
+  let cursor = grid.firstElementChild;
+  for (const p of products) {
+    const reused = existing.get(p.sku);
+    let el;
+    if (reused) {
+      existing.delete(p.sku);
+      el = reused;
+    } else {
+      const wrapper = document.createElement("div");
+      wrapper.innerHTML = productCardHTML(p).trim();
+      el = wrapper.firstElementChild;
+    }
+    if (el === cursor) {
+      cursor = cursor.nextElementSibling;
+    } else {
+      grid.insertBefore(el, cursor);
+    }
+  }
+
+  for (const leftover of existing.values()) leftover.remove();
+}
+
+function renderSearchResults(data) {
+  const { products, total, page, limit } = data;
+
+  diffRenderGrid(document.getElementById("searchGrid"), products);
+  for (const p of products) {
+    applyPriceChange(p.sku, p.price);
+    applyStockChange(p.sku, p.stock);
+  }
+
+  document.getElementById("searchCount").textContent = `Найдено: ${total}`;
+  document.getElementById("searchEmpty").hidden = total !== 0;
+
+  const totalPages = Math.max(Math.ceil(total / limit), 1);
+  document.getElementById("searchPagination").hidden = totalPages <= 1;
+  document.getElementById("searchPrev").disabled = page <= 1;
+  document.getElementById("searchNext").disabled = page >= totalPages;
+  document.getElementById("searchPageInfo").textContent = `Стр. ${page} из ${totalPages}`;
+  document.getElementById("searchReset").hidden = false;
+}
+
+async function runSearch() {
+  clearTimeout(searchDebounceTimer);
+  if (searchAbortController) searchAbortController.abort();
+
+  if (!isSearchActive()) {
+    searchAbortController = null;
+    showShelves();
+    return;
+  }
+
+  showSearchResultsView();
+  const controller = new AbortController();
+  searchAbortController = controller;
+  setSearchLoading(true);
+  try {
+    const params = currentSearchParams();
+    params.set("limit", String(SEARCH_PAGE_SIZE));
+    const res = await fetch(`${API_BASE}/api/catalog?${params.toString()}`, { signal: controller.signal });
+    if (!res.ok) throw new Error("Не удалось выполнить поиск");
+    renderSearchResults(await res.json());
+  } catch (err) {
+    if (err.name !== "AbortError") console.error(err);
+  } finally {
+    if (searchAbortController === controller) {
+      searchAbortController = null;
+      setSearchLoading(false);
+    }
+  }
+}
+
+function resyncActiveView() {
+  if (isSearchActive()) {
+    runSearch();
+  } else {
+    syncCatalog();
+  }
+}
+
+function scheduleSearch() {
+  clearTimeout(searchDebounceTimer);
+  searchDebounceTimer = setTimeout(runSearch, SEARCH_DEBOUNCE_MS);
+}
+
+(() => {
+  const input = document.getElementById("searchInput");
+  const submitBtn = document.getElementById("searchSubmit");
+  const catalogMenu = document.getElementById("catalogMenu");
+  const catalogBtn = document.getElementById("catalogBtn");
+
+  input.addEventListener("input", () => {
+    searchState.q = input.value.trim();
+    searchState.page = 1;
+    syncSearchUrl();
+    scheduleSearch();
+  });
+
+  input.addEventListener("keydown", (e) => {
+    if (e.key !== "Enter") return;
+    e.preventDefault();
+    runSearch();
+  });
+
+  submitBtn.addEventListener("click", () => runSearch());
+
+  catalogMenu.addEventListener("click", (e) => {
+    const link = e.target.closest("[data-type]");
+    if (!link) return;
+    e.preventDefault();
+    searchState.type = link.dataset.type;
+    searchState.page = 1;
+    catalogMenu.classList.remove("catalog-menu_open");
+    catalogBtn.setAttribute("aria-expanded", "false");
+    syncSearchUrl();
+    runSearch();
+  });
+
+  document.getElementById("searchPrev").addEventListener("click", () => {
+    if (searchState.page <= 1) return;
+    searchState.page -= 1;
+    syncSearchUrl();
+    runSearch();
+  });
+
+  document.getElementById("searchNext").addEventListener("click", () => {
+    searchState.page += 1;
+    syncSearchUrl();
+    runSearch();
+  });
+
+  document.getElementById("searchReset").addEventListener("click", () => {
+    searchState.q = "";
+    searchState.type = "";
+    searchState.page = 1;
+    input.value = "";
+    syncSearchUrl();
+    runSearch();
+  });
+
+  const params = new URLSearchParams(location.search);
+  searchState.q = params.get("q") || "";
+  searchState.type = params.get("type") || "";
+  searchState.page = Math.max(parseInt(params.get("page"), 10) || 1, 1);
+  input.value = searchState.q;
+  if (isSearchActive()) runSearch();
+})();
 
 function showSoldOut(sku) {
   applyStockChange(sku, 0);
