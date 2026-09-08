@@ -20,6 +20,7 @@ CREATE TABLE IF NOT EXISTS orders (
   promo_code TEXT,
   discount_amount INTEGER DEFAULT 0,
   issued_code TEXT,
+  reserved_until TEXT,
   created_at TEXT NOT NULL,
   updated_at TEXT NOT NULL
 );
