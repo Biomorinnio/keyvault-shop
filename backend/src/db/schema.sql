@@ -1,3 +1,16 @@
+CREATE TABLE IF NOT EXISTS products (
+  sku TEXT PRIMARY KEY,
+  name TEXT NOT NULL,
+  type TEXT NOT NULL,
+  price INTEGER NOT NULL,
+  currency TEXT NOT NULL DEFAULT 'RUB',
+  image TEXT,
+  updated_at TEXT NOT NULL
+);
+
+CREATE INDEX IF NOT EXISTS idx_products_name ON products (name);
+CREATE INDEX IF NOT EXISTS idx_products_type ON products (type);
+
 CREATE TABLE IF NOT EXISTS orders (
   id TEXT PRIMARY KEY,
   sku TEXT NOT NULL,

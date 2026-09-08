@@ -3,6 +3,8 @@ const fs = require("fs");
 const { DatabaseSync } = require("node:sqlite");
 const { KEYS_POOL_SEED } = require("../data/keysPool");
 const { PROMOCODES_SEED } = require("../data/promocodes");
+const { PRODUCTS } = require("../data/catalog");
+const { GENERATED_PRODUCTS, GENERATED_KEYS_SEED } = require("../data/generateProducts");
 
 const DB_PATH = process.env.DB_PATH || path.join(__dirname, "..", "..", "data.sqlite");
 
@@ -27,10 +29,24 @@ function immediateTransaction(fn) {
   };
 }
 
+function seedProducts() {
+  const insert = db.prepare(
+    "INSERT OR IGNORE INTO products (sku, name, type, price, currency, image, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?)"
+  );
+  const ts = new Date().toISOString();
+  immediateTransaction(() => {
+    for (const p of PRODUCTS) insert.run(p.sku, p.name, p.type, p.price, p.currency, p.image ?? null, ts);
+    for (const p of GENERATED_PRODUCTS) insert.run(p.sku, p.name, p.type, p.price, p.currency, p.image ?? null, ts);
+  })();
+}
+
 function seedKeysPool() {
   const insert = db.prepare("INSERT OR IGNORE INTO keys_pool (code, sku, status, order_id) VALUES (?, ?, 'available', NULL)");
   immediateTransaction(() => {
+    // Исходные 12 товаров получают заранее заготовленный пул ключей...
     for (const { code, sku } of KEYS_POOL_SEED) insert.run(code, sku);
+    // ...а сгенерированные — свои 0..5 ключей из генератора каталога.
+    for (const { code, sku } of GENERATED_KEYS_SEED) insert.run(code, sku);
   })();
 }
 
@@ -43,6 +59,7 @@ function seedPromocodes() {
   })();
 }
 
+seedProducts();
 seedKeysPool();
 seedPromocodes();
 
