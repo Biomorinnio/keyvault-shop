@@ -1,7 +1,7 @@
 const express = require("express");
 const crypto = require("crypto");
 const db = require("../db");
-const { getProduct } = require("../data/catalog");
+const { getProduct } = require("../services/catalog");
 const { applyPendingEventsForOrder } = require("../services/webhookProcessor");
 
 const router = express.Router();

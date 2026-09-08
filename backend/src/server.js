@@ -5,14 +5,14 @@ const paymentRouter = require("./routes/payment");
 const webhookRouter = require("./routes/webhook");
 const adminRouter = require("./routes/admin");
 const promoRouter = require("./routes/promo");
-const { PRODUCTS } = require("./data/catalog");
+const { listCatalog } = require("./services/catalog");
 
 const app = express();
 app.use(express.json());
 
 app.use(express.static(path.join(__dirname, "..", "..", "frontend")));
 
-app.get("/api/catalog", (req, res) => res.json({ products: PRODUCTS }));
+app.get("/api/catalog", (req, res) => res.json({ products: listCatalog(50) }));
 
 app.use(ordersRouter);
 app.use(paymentRouter);

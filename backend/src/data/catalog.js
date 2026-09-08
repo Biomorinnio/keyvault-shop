@@ -13,10 +13,7 @@ const PRODUCTS = [
   { sku: "GIFT-ROBLOX-800", name: "Roblox 800 Robux", type: "giftcard", price: 890, currency: "RUB" },
 ];
 
-const PRODUCTS_BY_SKU = new Map(PRODUCTS.map((p) => [p.sku, p]));
-
-function getProduct(sku) {
-  return PRODUCTS_BY_SKU.get(sku) || null;
-}
-
-module.exports = { PRODUCTS, getProduct };
+// Сид-данные исходных 12 товаров. Источник истины по цене/остатку в рантайме —
+// таблица products в БД (см. services/catalog.js); здесь только то, чем
+// засеивается products при первом старте.
+module.exports = { PRODUCTS };
