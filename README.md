@@ -44,6 +44,7 @@ node scripts/race-webhook.js       # 50 параллельных вебхуко�
 node scripts/race-double-click.js  # 2 параллельных "Купить" по одному заказу
 node scripts/race-out-of-order.js  # вебхук приходит раньше создания заказа
 node scripts/race-promo.js         # параллельное применение промокода с лимитом 3
+node scripts/race-last-item.js     # 2 и 50 параллельных POST /orders на последнюю единицу
 ```
 
 Каждый скрипт печатает диагностику и завершается с кодом `0` (`✅ PASS`) или
