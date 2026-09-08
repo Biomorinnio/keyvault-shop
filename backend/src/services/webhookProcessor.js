@@ -2,6 +2,8 @@ const db = require("../db");
 const { canTransition } = require("./orderStateMachine");
 const { markWebhookProcessed } = require("../lib/idempotency");
 const { attemptIssue } = require("./issuance");
+const { broadcast } = require("./realtime");
+const { getStock } = require("./catalog");
 
 function now() {
   return new Date().toISOString();
@@ -12,11 +14,16 @@ const applyWebhookEventTxn = db.immediateTransaction((ev) => {
   if (!order) return { applied: false, reason: "order_not_found" };
 
   if (ev.status === "failed") {
+    let stockChangedSku = null;
     if (canTransition(order.status, "payment_failed")) {
+      const released = db
+        .prepare("UPDATE keys_pool SET status = 'available', order_id = NULL WHERE order_id = ? AND status = 'reserved'")
+        .run(ev.orderId);
+      if (released.changes > 0) stockChangedSku = order.sku;
       db.prepare("UPDATE orders SET status = 'payment_failed', updated_at = ? WHERE id = ?").run(now(), ev.orderId);
     }
     markWebhookProcessed(db, ev.eventId);
-    return { applied: true, shouldIssue: false };
+    return { applied: true, shouldIssue: false, stockChangedSku };
   }
 
   if (ev.status === "paid") {
@@ -35,6 +42,10 @@ const applyWebhookEventTxn = db.immediateTransaction((ev) => {
 
 function applyWebhookEvent(event) {
   const result = applyWebhookEventTxn(event);
+
+  if (result.stockChangedSku) {
+    broadcast("stock_changed", { sku: result.stockChangedSku, stock: getStock(result.stockChangedSku) });
+  }
 
   if (result.shouldIssue) {
     attemptIssue(event.orderId).catch((err) => {
