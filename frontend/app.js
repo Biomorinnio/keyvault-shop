@@ -228,7 +228,12 @@ function showSoldOut(sku) {
   if (closeBtn) closeBtn.addEventListener("click", () => (document.getElementById("soldout").hidden = true));
 })();
 
+const pendingCheckoutSkus = new Set();
+
 async function startCheckout(sku, button) {
+  if (pendingCheckoutSkus.has(sku) || button.disabled) return;
+  pendingCheckoutSkus.add(sku);
+
   const original = button.textContent;
   button.disabled = true;
   button.textContent = "Оформляем...";
@@ -254,6 +259,8 @@ async function startCheckout(sku, button) {
     console.error(err);
     button.disabled = false;
     button.textContent = original;
+  } finally {
+    pendingCheckoutSkus.delete(sku);
   }
 }
 
@@ -430,7 +437,12 @@ function initCheckout(orderId) {
     } catch (err) {
       console.error(err);
       payAttempted = false;
-      elPay.disabled = false;
+      try {
+        await refresh();
+      } catch (refreshErr) {
+        console.error(refreshErr);
+        elPay.disabled = false;
+      }
     }
   }
 
